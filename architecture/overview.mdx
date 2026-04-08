@@ -1,0 +1,91 @@
+---
+title: "Architecture overview"
+description: "How the MVC layers fit together in the python-mariadb-example project."
+---
+
+This project follows the **Model-View-Controller (MVC)** architectural pattern to separate concerns across three distinct layers. A dedicated data-access layer (`sql/`) sits beneath the controllers, handling all direct communication with MariaDB.
+
+## MVC layers
+
+| Layer | Directory | Responsibility |
+|---|---|---|
+| Data access | `sql/` | Opens and holds the MariaDB connection; exposes a cursor to callers |
+| Model | `model/` | Python dataclasses that represent a single database row |
+| Controller | `controller/` | Business logic; executes SQL queries and returns model objects |
+| View | `view/` | Interactive CLI that collects user input and calls controllers |
+
+## Request flow
+
+```
+User input
+   │
+   ▼
+UserInterface (view/ui.py)
+   │  calls methods on
+   ▼
+EmployeeController / DepartmentController (controller/)
+   │  executes queries via
+   ▼
+MariaDBInstance (sql/sql_connector.py)
+   │  connected to
+   ▼
+MariaDB database
+```
+
+## How main.py wires everything together
+
+`main.py` is the single entry point. It creates one `MariaDBInstance`, passes it into both controllers, injects the controllers into `UserInterface`, and starts the event loop. When the user exits, it closes the database connection.
+
+```python
+# main.py
+from controller.department_controller import DepartmentController
+from controller.employee_controller import EmployeeController
+from sql.sql_connector import MariaDBInstance
+from view.ui import UserInterface
+
+if __name__ == "__main__":
+    # Create a connection with MariaDB using the created MariaDB Instance
+    sql = MariaDBInstance(
+        user="scott",
+        password="tiger",
+        database="scott",
+    )
+
+    # Instantiate the controllers
+    emp_ctrl = EmployeeController(sql)
+    dept_ctrl = DepartmentController(sql)
+
+    # Instantiate the UI
+    ui = UserInterface(emp_ctrl, dept_ctrl)
+    ui.start()
+
+    # Once the program exits, close the db connection
+    sql.close()
+```
+
+The `if __name__ == "__main__":` guard ensures that only `main.py` acts as the execution entry point — any module-level code in imported files is never run directly.
+
+## Why a single MariaDBInstance
+
+The `MariaDBInstance` class is designed to be instantiated **once** and shared across all controllers. Creating multiple instances would open multiple connections to MariaDB, which wastes resources and risks connection-limit errors. Passing the single instance by reference to each controller means every query goes through the same connection and cursor.
+
+<Note>
+  If you add new controllers, pass the same `sql` instance into their constructor rather than creating a new `MariaDBInstance`.
+</Note>
+
+## Layer-by-layer pages
+
+<CardGroup cols={2}>
+  <Card title="Database connection" icon="database" href="/architecture/database-connection">
+    How `MariaDBInstance` opens and manages the MariaDB connection.
+  </Card>
+  <Card title="Data models" icon="table" href="/architecture/models">
+    The `Employee` and `Department` dataclasses that represent database rows.
+  </Card>
+  <Card title="Controllers" icon="code" href="/architecture/controllers">
+    SQL query execution and business logic in `EmployeeController` and `DepartmentController`.
+  </Card>
+  <Card title="User interface" icon="terminal" href="/architecture/user-interface">
+    The interactive CLI menu implemented in `UserInterface`.
+  </Card>
+</CardGroup>

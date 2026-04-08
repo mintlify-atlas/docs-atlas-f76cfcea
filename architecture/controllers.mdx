@@ -1,0 +1,252 @@
+---
+title: "Controllers"
+description: "Business logic classes that execute SQL queries against the emp and dept tables."
+---
+
+The `controller/` directory contains two classes — `EmployeeController` and `DepartmentController` — that sit between the UI and the database. Each controller receives a `MariaDBInstance` at construction time, stores it as `self.db`, and calls `self.db.cur()` to execute queries.
+
+## Design principles
+
+**Parameterized queries** — every query that accepts user-supplied values uses `?` placeholders rather than string interpolation. The `mariadb` driver substitutes values safely, preventing SQL injection.
+
+**Consistent error handling** — write operations (`INSERT`, `DELETE`) are wrapped in `try/except mariadb.Error`. On failure the error is printed and the method returns `None`. Callers check for `None` to detect failure.
+
+**Model unpacking** — raw result tuples are unpacked directly into dataclass constructors: `Employee(*row)`, `Department(*row)`.
+
+---
+
+## EmployeeController
+
+Defined in `controller/employee_controller.py`. Operates on the `emp` table.
+
+```python
+import mariadb
+from model.employee import Employee
+from sql.sql_connector import MariaDBInstance
+
+class EmployeeController():
+    db: MariaDBInstance
+    TABLE_NAME = "emp"
+
+    def __init__(self, db: MariaDBInstance):
+        self.db = db
+```
+
+`TABLE_NAME = "emp"` is used in every f-string query, making a future table rename a one-line change.
+
+### Methods
+
+<AccordionGroup>
+
+<Accordion title="get_all_employees()">
+
+Fetches every row from `emp` and returns them as a list of `Employee` objects. Also prints each employee to stdout using `Employee.__str__`.
+
+```python
+def get_all_employees(self):
+    self.db.cur().execute(f"SELECT * FROM {self.TABLE_NAME}") 
+    raw_result = self.db.cur().fetchall()
+
+    results: list[Employee] = []
+
+    for row in raw_result:
+        results.append(
+            Employee(*row)
+        )
+
+    for r in results:
+        print(r)
+
+    return results
+```
+
+**Returns:** `list[Employee]`
+
+</Accordion>
+
+<Accordion title="get_employee_by_id(empno)">
+
+Fetches a single row matching the given `empno`. Returns `None` if no matching record is found.
+
+```python
+def get_employee_by_id(self, empno: int) -> Employee | None:
+    self.db.cur().execute(f"SELECT * FROM {self.TABLE_NAME} WHERE empno= ?", (empno,)) 
+    raw_result = self.db.cur().fetchone()
+
+    if raw_result == None:
+        return None
+    
+    return Employee(*raw_result)
+```
+
+**Parameters:**
+
+<ParamField path="empno" type="int" required>
+  The employee number to look up. Passed as a parameterized value to prevent SQL injection.
+</ParamField>
+
+**Returns:** `Employee | None`
+
+</Accordion>
+
+<Accordion title="insert_employee(employee)">
+
+Inserts a new row into `emp` using all eight fields from the `Employee` dataclass. Returns `True` on success or `None` if a `mariadb.Error` is raised.
+
+```python
+def insert_employee(self, employee: Employee) -> True | None:
+    try: 
+        self.db.cur().execute(
+            f"INSERT INTO {self.TABLE_NAME} VALUES (?,?,?,?,?,?,?,?)",
+            (
+                employee.empno,
+                employee.ename,
+                employee.job,
+                employee.mgr,
+                employee.hiredate,
+                employee.sal,
+                employee.comm,
+                employee.deptno
+            )
+        )
+
+        return True
+    except mariadb.Error as e:
+        print(f"A database error occurred: {e}")
+        return None
+```
+
+**Parameters:**
+
+<ParamField path="employee" type="Employee" required>
+  A fully constructed `Employee` dataclass instance. Fields are mapped positionally to the eight `?` placeholders in the `INSERT` statement.
+</ParamField>
+
+**Returns:** `True | None`
+
+</Accordion>
+
+<Accordion title="delete_employee_by_empno(empno)">
+
+Deletes the row from `emp` whose `empno` matches the given value. Returns `True` on success or `None` on database error.
+
+```python
+def delete_employee_by_empno(self, empno: int) -> True | None:
+    try:
+        self.db.cur().execute(
+            f"DELETE FROM {self.TABLE_NAME} WHERE empno=?",
+            (empno,)
+        )
+
+        return True
+    except mariadb.Error as e:
+        print(f"A database error occurred: {e}")
+        return None
+```
+
+**Parameters:**
+
+<ParamField path="empno" type="int" required>
+  The employee number of the record to delete.
+</ParamField>
+
+**Returns:** `True | None`
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## DepartmentController
+
+Defined in `controller/department_controller.py`. Operates on the `dept` table.
+
+```python
+from model.department import Department
+from sql.sql_connector import MariaDBInstance
+
+class DepartmentController:
+    db: MariaDBInstance
+    TABLE_NAME = "dept"
+
+    def __init__(self, db: MariaDBInstance):
+        self.db = db
+```
+
+### Methods
+
+<AccordionGroup>
+
+<Accordion title="get_all_dept()">
+
+Fetches every row from `dept` and returns a list of `Department` objects.
+
+```python
+def get_all_dept(self):
+    self.db.cur().execute(f"SELECT * FROM {self.TABLE_NAME}") 
+    raw_result = self.db.cur().fetchall()
+
+    results: list[Department] = []
+
+    for row in raw_result:
+        results.append(
+            Department(*row)
+        )
+        
+    return results
+```
+
+**Returns:** `list[Department]`
+
+</Accordion>
+
+<Accordion title="get_employee_count_per_department()">
+
+Executes a `LEFT JOIN` between `dept` and `emp`, grouping by department to count employees. Departments with no employees appear in the result with a count of `0` because of the `LEFT JOIN`.
+
+```python
+def get_employee_count_per_department(self):
+    self.db.cur().execute(f'''SELECT d.dname DEPARTMENT_NAME, COUNT(e.empno) EMPLOYEE_COUNT 
+                          FROM {self.TABLE_NAME} d LEFT JOIN emp e ON d.deptno=e.deptno
+                          GROUP BY d.deptno''')
+    
+    results = self.db.cur().fetchall()
+
+    return results
+```
+
+The SQL executed:
+
+```sql
+SELECT d.dname DEPARTMENT_NAME, COUNT(e.empno) EMPLOYEE_COUNT 
+FROM dept d LEFT JOIN emp e ON d.deptno=e.deptno
+GROUP BY d.deptno
+```
+
+**Returns:** `list[tuple[str, int]]` — each tuple is `(department_name, employee_count)`.
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Error handling pattern
+
+Write operations in `EmployeeController` follow this pattern:
+
+```python
+try:
+    self.db.cur().execute(...)
+    return True
+except mariadb.Error as e:
+    print(f"A database error occurred: {e}")
+    return None
+```
+
+The UI layer checks the return value and shows an appropriate message to the user if `None` is received. Read-only queries (`SELECT`) do not use `try/except` — if the connection is broken the exception will propagate and terminate the application.
+
+<Warning>
+  `insert_employee` and `delete_employee_by_empno` do not call `conn.rollback()` on failure. The source code includes a comment noting that this would be appropriate for partial multi-statement transactions. The current queries are single statements, so rollback is not strictly necessary, but it is worth adding if you extend the controllers with multi-step write operations.
+</Warning>

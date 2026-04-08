@@ -1,0 +1,136 @@
+---
+title: "Data models"
+description: "Python dataclasses representing database records for the emp and dept tables."
+---
+
+The `model/` directory contains two Python dataclasses — `Employee` and `Department` — that map directly to rows in the MariaDB `emp` and `dept` tables. Dataclasses are used because they provide automatic `__init__`, `__repr__`, and equality methods with minimal boilerplate, and their field order matches the column order returned by `SELECT *` queries.
+
+## Instantiation from query results
+
+Controllers unpack a raw database row tuple directly into a dataclass constructor using the `*` unpacking operator:
+
+```python
+Employee(*row)
+Department(*row)
+```
+
+This works because the field declaration order in each dataclass matches the column order in the database table. The cursor's `fetchall()` and `fetchone()` methods return plain tuples, so no manual mapping is required.
+
+---
+
+## Employee
+
+Defined in `model/employee.py`. Represents a single row from the `emp` table.
+
+### Source
+
+```python
+from datetime import datetime
+from dataclasses import dataclass
+
+@dataclass
+class Employee:
+    empno: int
+    ename: str | None = None
+    job: str | None = None
+    mgr: int | None = None
+    hiredate : datetime.date | None = None
+    sal: float | None = None
+    comm: float | None = None
+    deptno: int | None = None
+
+    def __str__(self):
+        return f"-----\nEmployee No: {self.empno}\t\tEmployee Name: {self.ename}\nJob: {self.job}\t\tManager Empno: {self.mgr}\nSalary: {self.sal}\t\tCommission: {self.comm}\nDepartment No.: {self.deptno}\t\tHiredate: {self.hiredate}\n"
+```
+
+### Fields
+
+<ResponseField name="empno" type="int" required>
+  Employee number. Primary key of the `emp` table. The only required field — all others default to `None`.
+</ResponseField>
+
+<ResponseField name="ename" type="str | None">
+  Employee name. Defaults to `None` if not provided.
+</ResponseField>
+
+<ResponseField name="job" type="str | None">
+  Job title (e.g., `MANAGER`, `CLERK`). Defaults to `None`.
+</ResponseField>
+
+<ResponseField name="mgr" type="int | None">
+  Employee number of this employee's manager. References `empno` in the same table. Defaults to `None`.
+</ResponseField>
+
+<ResponseField name="hiredate" type="datetime.date | None">
+  Date the employee was hired. Stored and returned as a `datetime.date` object. Defaults to `None`.
+</ResponseField>
+
+<ResponseField name="sal" type="float | None">
+  Monthly salary. Defaults to `None`.
+</ResponseField>
+
+<ResponseField name="comm" type="float | None">
+  Commission amount. Defaults to `None`.
+</ResponseField>
+
+<ResponseField name="deptno" type="int | None">
+  Department number. References `deptno` in the `dept` table. Defaults to `None`.
+</ResponseField>
+
+### Display formatting
+
+`__str__` formats the employee as a multi-line block for CLI output. `EmployeeController.get_all_employees()` calls `print(r)` on each result, which triggers this method.
+
+```
+-----
+Employee No: 7369		Employee Name: SMITH
+Job: CLERK		Manager Empno: 7902
+Salary: 800.0		Commission: None
+Department No.: 20		Hiredate: 1980-12-17
+```
+
+---
+
+## Department
+
+Defined in `model/department.py`. Represents a single row from the `dept` table.
+
+### Source
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Department:
+    deptno: int
+    dname: str | None
+    loc: str | None = None
+
+    def __str__(self):
+        return f"-----\nDepartment Number: {self.deptno}\nDepartment Name: {self.dname}\nLocation: {self.loc}"
+```
+
+### Fields
+
+<ResponseField name="deptno" type="int" required>
+  Department number. Primary key of the `dept` table. Required positional argument.
+</ResponseField>
+
+<ResponseField name="dname" type="str | None" required>
+  Department name (e.g., `ACCOUNTING`, `RESEARCH`). Required positional argument; can be `None` if the database value is `NULL`.
+</ResponseField>
+
+<ResponseField name="loc" type="str | None">
+  Physical location of the department (e.g., `NEW YORK`, `DALLAS`). Defaults to `None`.
+</ResponseField>
+
+### Display formatting
+
+`__str__` produces a compact three-line block used by `UserInterface.print_all_departments()`:
+
+```
+-----
+Department Number: 10
+Department Name: ACCOUNTING
+Location: NEW YORK
+```

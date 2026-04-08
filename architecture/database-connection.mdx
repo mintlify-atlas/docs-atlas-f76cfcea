@@ -1,0 +1,118 @@
+---
+title: "Database connection"
+description: "MariaDBInstance class for managing the MariaDB connection."
+---
+
+`MariaDBInstance` (defined in `sql/sql_connector.py`) wraps the `mariadb` Python package and provides a single, reusable connection object that is shared across the entire application.
+
+## Full source
+
+```python
+import mariadb
+import sys
+
+class MariaDBInstance():
+    conn = None
+    cursor: mariadb.Cursor = None
+
+    # Initialization of the MariaDB connection, on the constructor of the class
+    # host and port have default values, meaning that if left out when creating the instance of the class, the default values will be set
+    def __init__(self, user: str, password: str, database: str, host: str = "127.0.0.1", port : int = 3306):
+        try: 
+            self.conn = mariadb.connect(
+                user = user,
+                password = password,
+                host = host,
+                port = port,
+                database = database
+            )
+        except mariadb.Error as e:
+            print(f"Error connecting to MariaDB Platform: {e}")
+            sys.exit(1)
+
+        # Gets the cursor
+        self.cursor = self.conn.cursor()
+
+    # Cursor object getter
+    def cur(self) -> mariadb.Cursor:
+        return self.cursor
+    
+    # Closes the connection, cursor will no longer be accessible after this
+    def close(self):
+        self.conn.close()
+```
+
+## Constructor
+
+`MariaDBInstance(user, password, database, host, port)`
+
+<ParamField path="user" type="string" required>
+  MariaDB username used to authenticate the connection.
+</ParamField>
+
+<ParamField path="password" type="string" required>
+  Password for the MariaDB user.
+</ParamField>
+
+<ParamField path="database" type="string" required>
+  Name of the database schema to connect to.
+</ParamField>
+
+<ParamField path="host" type="string" default="127.0.0.1">
+  Hostname or IP address of the MariaDB server.
+</ParamField>
+
+<ParamField path="port" type="number" default="3306">
+  TCP port the MariaDB server is listening on.
+</ParamField>
+
+## Methods
+
+### `cur()`
+
+Returns the `mariadb.Cursor` object for the active connection. Controllers call this method every time they need to execute a query.
+
+```python
+def cur(self) -> mariadb.Cursor:
+    return self.cursor
+```
+
+**Returns:** `mariadb.Cursor`
+
+### `close()`
+
+Closes the underlying `mariadb.Connection`. After calling `close()`, the cursor is no longer usable. This method is called by `main.py` after `ui.start()` returns (i.e., when the user exits the application).
+
+```python
+def close(self):
+    self.conn.close()
+```
+
+## Error handling
+
+If `mariadb.connect()` raises a `mariadb.Error` — for example because the server is unreachable or the credentials are wrong — the constructor prints the error message and calls `sys.exit(1)`, terminating the process immediately. This prevents the rest of the application from starting in a broken state.
+
+```python
+except mariadb.Error as e:
+    print(f"Error connecting to MariaDB Platform: {e}")
+    sys.exit(1)
+```
+
+## Usage pattern
+
+`main.py` creates one `MariaDBInstance` and passes it as a constructor argument to every controller. The controllers store it as `self.db` and call `self.db.cur()` to execute queries.
+
+```python
+sql = MariaDBInstance(
+    user="scott",
+    password="tiger",
+    database="scott",
+)
+
+emp_ctrl  = EmployeeController(sql)
+dept_ctrl = DepartmentController(sql)
+```
+
+<Note>
+  Only one `MariaDBInstance` should be created per application run. Creating multiple instances opens multiple database connections unnecessarily. Pass the same instance to every controller that needs database access.
+</Note>

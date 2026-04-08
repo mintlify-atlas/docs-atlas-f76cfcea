@@ -1,0 +1,65 @@
+---
+title: 'Introduction'
+description: 'A Python CLI application that demonstrates how to connect to MariaDB using the MVC architectural pattern.'
+---
+
+## What is this project?
+
+`python-mariadb-example` is a command-line application that shows how to connect a Python program to a MariaDB database. It uses the official `mariadb` Python connector and organizes the code using the **Model-View-Controller (MVC)** pattern.
+
+The app operates on the classic **scott/tiger** demo schema — the same two-table dataset (employees and departments) used in Oracle training materials for decades. It lets you list, look up, insert, and delete records through an interactive CLI menu.
+
+## What you'll learn
+
+- How to establish and manage a MariaDB connection in Python using `MariaDBInstance`
+- How to structure database access code with MVC separation of concerns
+- How to use Python dataclasses as lightweight model objects
+- How to write parameterized SQL queries to prevent injection
+- How to build an interactive CLI loop with `match` statements (Python 3.10+)
+
+## Project structure
+
+```
+python-mariadb-example/
+├── main.py                        # Entry point — wires up the connection, controllers, and UI
+├── requirements.txt               # Single dependency: mariadb
+├── sql/
+│   └── sql_connector.py           # MariaDBInstance — manages the connection and cursor
+├── model/
+│   ├── employee.py                # Employee dataclass (maps to the emp table)
+│   └── department.py             # Department dataclass (maps to the dept table)
+├── controller/
+│   ├── employee_controller.py     # CRUD logic for the emp table
+│   └── department_controller.py  # Query logic for the dept table
+└── view/
+    └── ui.py                      # CLI menu, user prompts, and output formatting
+```
+
+Each layer has a single responsibility:
+
+| Layer | Directory | Responsibility |
+|---|---|---|
+| **Model** | `model/` | Data shape — Python dataclasses that mirror table rows |
+| **View** | `view/` | User interaction — menus, prompts, and formatted output |
+| **Controller** | `controller/` | Business logic — executes SQL and returns model objects |
+| **Connector** | `sql/` | Connection management — one shared `mariadb.Connection` instance |
+
+## The scott/tiger demo database
+
+The app connects to a database named `scott` with the user `scott` and password `tiger`. This is a well-known demo schema originally shipped with Oracle databases. It contains two tables:
+
+- **`emp`** — employee records with fields like name, job title, salary, manager, and department
+- **`dept`** — department records with a name and location
+
+The schema is small enough to understand at a glance but rich enough to demonstrate joins, aggregations, and relational lookups.
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Prerequisites" icon="list-check" href="/prerequisites">
+    Set up Python, MariaDB, and the scott database before running the app.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Clone the repo, install dependencies, and run the app in minutes.
+  </Card>
+</CardGroup>

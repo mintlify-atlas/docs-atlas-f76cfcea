@@ -1,0 +1,47 @@
+{
+  "projectType": "general",
+  "projectName": "Python MariaDB Example",
+  "projectDescription": "A Python CLI application demonstrating how to connect to and perform CRUD operations on a MariaDB database using an MVC architecture.",
+  "theme": "palm",
+  "primaryColor": "#003545",
+  "lightColor": "#e0f4fa",
+  "darkColor": "#001e29",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": ["introduction", "prerequisites", "quickstart"]
+      },
+      {
+        "group": "Architecture",
+        "pages": ["architecture/overview", "architecture/database-connection", "architecture/models", "architecture/controllers", "architecture/user-interface"]
+      },
+      {
+        "group": "Usage Guide",
+        "pages": ["usage/running-the-app", "usage/employee-operations", "usage/department-operations"]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "MariaDB connection management via a singleton-style connector class",
+    "MVC architecture separating data models, business logic, and CLI UI",
+    "Employee CRUD operations: list, lookup by ID, insert, and delete",
+    "Department queries including employee count per department via JOIN",
+    "Interactive CLI menu with input validation and cancellable operations",
+    "Parameterized SQL queries to prevent injection vulnerabilities"
+  ],
+  "publicApiSurface": [
+    "MariaDBInstance(user, password, database, host, port)",
+    "MariaDBInstance.cur()",
+    "MariaDBInstance.close()",
+    "EmployeeController.get_all_employees()",
+    "EmployeeController.get_employee_by_id(empno)",
+    "EmployeeController.insert_employee(employee)",
+    "EmployeeController.delete_employee_by_empno(empno)",
+    "DepartmentController.get_all_dept()",
+    "DepartmentController.get_employee_count_per_department()",
+    "UserInterface.start()",
+    "Employee dataclass (empno, ename, job, mgr, hiredate, sal, comm, deptno)",
+    "Department dataclass (deptno, dname, loc)"
+  ]
+}

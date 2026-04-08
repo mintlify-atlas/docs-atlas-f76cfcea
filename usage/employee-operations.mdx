@@ -1,0 +1,268 @@
+---
+title: 'Employee operations'
+description: 'How to list, search, add, and delete employees using the CLI.'
+---
+
+The application provides four employee-related operations accessible from the main menu. Each operation interacts with the `emp` table in MariaDB.
+
+## Option [1] — Get all employees
+
+Select `1` from the main menu to retrieve and display every row in the `emp` table.
+
+```text
+Enter choice: 1
+```
+
+The application fetches all employee records and prints each one using the following format:
+
+```text
+-----
+Employee No: 7369		Employee Name: SMITH
+Job: CLERK		Manager Empno: 7902
+Salary: 800.0		Commission: None
+Department No.: 20		Hiredate: 1980-12-17
+```
+
+### Fields displayed
+
+| Field | Description |
+|-------|-------------|
+| `Employee No` | Employee number (`empno`) |
+| `Employee Name` | Employee name (`ename`) |
+| `Job` | Job title (`job`) |
+| `Manager Empno` | Employee number of the manager (`mgr`) |
+| `Salary` | Salary (`sal`) |
+| `Commission` | Commission amount (`comm`), shown as `None` if not set |
+| `Department No.` | Department number (`deptno`) |
+| `Hiredate` | Date the employee was hired (`hiredate`) |
+
+<Note>
+  All employees are printed to stdout in sequence. Fields that are `NULL` in the database are displayed as `None`.
+</Note>
+
+---
+
+## Option [2] — Get employee by number
+
+Select `2` from the main menu to look up a single employee by their employee number.
+
+```text
+Enter choice: 2
+```
+
+The application prompts:
+
+```text
+Enter employee number: 
+```
+
+Enter the integer employee number and press **Enter**.
+
+**If the employee is found**, the record is printed in the same format as option [1]:
+
+```text
+-----
+Employee No: 7369		Employee Name: SMITH
+Job: CLERK		Manager Empno: 7902
+Salary: 800.0		Commission: None
+Department No.: 20		Hiredate: 1980-12-17
+```
+
+**If no employee exists with that number**, the following message is printed and the app returns to the main menu:
+
+```text
+Employee not found!
+```
+
+<Warning>
+  The input is passed directly to `int()`. Entering a non-integer value will raise an unhandled `ValueError` and crash the application.
+</Warning>
+
+---
+
+## Option [5] — Insert employee
+
+Select `5` from the main menu to add a new employee record to the `emp` table.
+
+```text
+Enter choice: 5
+```
+
+The application walks through each field with individual prompts. For every field, the prompt includes a reminder that you can cancel or enter `n/a`:
+
+```text
+Enter employee number:
+Enter /cancel to abort operation
+Input: 
+```
+
+<Steps>
+  <Step title="Enter employee number (empno)">
+    Enter an integer. This is the primary key — it must be unique.
+
+    ```text
+    Enter employee number:
+    Enter /cancel to abort operation
+    Input: 7935
+    ```
+  </Step>
+  <Step title="Enter employee name (ename)">
+    Enter a string value for the employee's name.
+
+    ```text
+    Enter employee name:
+    Enter /cancel to abort operation
+    Input: JONES
+    ```
+  </Step>
+  <Step title="Enter job title (job)">
+    Enter a string value for the job title.
+
+    ```text
+    Enter job:
+    Enter /cancel to abort operation
+    Input: ANALYST
+    ```
+  </Step>
+  <Step title="Enter manager employee number (mgr)">
+    Enter the integer employee number of the employee's manager. Enter `n/a` if the employee has no manager.
+
+    ```text
+    Enter manager's employee no.: 
+    Enter /cancel to abort operation
+    Input: 7839
+    ```
+  </Step>
+  <Step title="Enter hire date (hiredate)">
+    Enter the hire date as a string in `YYYY-MM-DD` format (e.g., `1980-12-17`). The value is accepted as a plain string — no format validation is performed at input time.
+
+    ```text
+    Enter hiredate (YYYY-MM-DD):
+    Enter /cancel to abort operation
+    Input: 2024-03-15
+    ```
+  </Step>
+  <Step title="Enter salary (sal)">
+    Enter a numeric value for the salary (decimals accepted).
+
+    ```text
+    Enter salary:
+    Enter /cancel to abort operation
+    Input: 3000.0
+    ```
+  </Step>
+  <Step title="Enter commission (comm)">
+    Enter a numeric value for the commission, or `n/a` to leave it `NULL`.
+
+    ```text
+    Enter commission:
+    Enter /cancel to abort operation
+    Input: n/a
+    ```
+  </Step>
+  <Step title="Enter department number (deptno)">
+    Enter the integer department number the employee belongs to.
+
+    ```text
+    Enter Department No.:
+    Enter /cancel to abort operation
+    Input: 20
+    ```
+  </Step>
+</Steps>
+
+### On success
+
+The newly inserted employee record is printed:
+
+```text
+Successfully inserted employee:
+-----
+Employee No: 7935		Employee Name: JONES
+Job: ANALYST		Manager Empno: 7839
+Salary: 3000.0		Commission: None
+Department No.: 20		Hiredate: 2024-03-15
+```
+
+### On failure
+
+If the database rejects the insert (e.g., duplicate primary key, foreign key violation), an error message is shown:
+
+```text
+A database error occurred: <error message from MariaDB>
+Failed to insert.
+```
+
+### Cancelling the operation
+
+Type `/cancel` at any prompt to abort the entire insert. The app will print:
+
+```text
+Insertion cancelled.
+```
+
+No record is written to the database.
+
+<Tip>
+  Use `n/a` for optional fields (`mgr`, `comm`) to explicitly set them to `NULL`. Leaving a field blank will prompt you to enter `n/a` instead — the app does not accept empty input.
+</Tip>
+
+<Note>
+  The hiredate field accepts any string — it is collected with `input_type="str"` in the source, so no format validation occurs at input time. Use `YYYY-MM-DD` format (e.g., `1980-12-17`) to match the MariaDB `DATE` column type.
+</Note>
+
+---
+
+## Option [6] — Delete employee by number
+
+Select `6` from the main menu to delete an employee record from the `emp` table.
+
+```text
+Enter choice: 6
+```
+
+The application prompts:
+
+```text
+Enter employee number to delete:
+Enter /cancel to abort operation
+Input: 
+```
+
+Enter the integer employee number of the record to delete.
+
+**If the employee is not found**, the following message is printed and the operation is aborted:
+
+```text
+Employee not found.
+```
+
+**If the employee exists and deletion succeeds**, the application confirms with the employee's name:
+
+```text
+Successfully deleted SMITH.
+```
+
+**If the deletion fails** due to a database error (e.g., foreign key constraint):
+
+```text
+A database error occurred: <error message from MariaDB>
+Deletion failed
+```
+
+<Warning>
+  Deletion is permanent. There is no confirmation prompt before the record is removed from the database.
+</Warning>
+
+---
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Running the app" icon="terminal" href="/usage/running-the-app">
+    How to start the application and navigate the main menu.
+  </Card>
+  <Card title="Department operations" icon="building" href="/usage/department-operations">
+    View departments and employee counts per department.
+  </Card>
+</CardGroup>

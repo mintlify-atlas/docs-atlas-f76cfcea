@@ -1,97 +1,61 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Python MariaDB Example"
+description: "A Python CLI application demonstrating how to connect to and perform CRUD operations on a MariaDB database using a clean MVC architecture."
 ---
 
-## Setting up
+This project shows how to build a structured Python application that interacts with a MariaDB database. It covers database connection management, data modeling, business logic controllers, and an interactive command-line interface — all organized using the Model-View-Controller (MVC) pattern.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Prerequisites" icon="list-check" href="/prerequisites">
+    Set up Python, MariaDB, and the required database schema before running the app.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install dependencies, configure the connection, and run the app in minutes.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Architecture overview" icon="sitemap" href="/architecture/overview">
+    Understand how the MVC layers fit together and how data flows through the app.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Usage guide" icon="terminal" href="/usage/running-the-app">
+    Explore the interactive CLI menu and learn how to manage employees and departments.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What this project covers
 
-Everything you need to create world-class documentation.
+<CardGroup cols={2}>
+  <Card title="Database connection" icon="database" href="/architecture/database-connection">
+    A reusable `MariaDBInstance` class that manages a single database connection and cursor.
+  </Card>
+  <Card title="Data models" icon="table" href="/architecture/models">
+    Python dataclasses representing `Employee` and `Department` records from the database.
+  </Card>
+  <Card title="Controllers" icon="gears" href="/architecture/controllers">
+    Business logic classes that execute SQL queries and return typed model objects.
+  </Card>
+  <Card title="CLI interface" icon="rectangle-terminal" href="/architecture/user-interface">
+    An interactive menu-driven interface with input validation and cancellable operations.
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Key features
 
-## Need inspiration?
+- **Parameterized queries** — All SQL uses `?` placeholders to prevent injection vulnerabilities
+- **MVC separation** — Models, controllers, and UI each have distinct responsibilities
+- **Typed results** — Query results are mapped to Python dataclasses for safe attribute access
+- **Cancellable inputs** — Any multi-field operation can be aborted mid-way with `/cancel`
+- **JOIN queries** — Department controller demonstrates a `LEFT JOIN` to count employees per department
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Steps>
+  <Step title="Set up the database">
+    Install MariaDB and create the `scott` database with the `emp` and `dept` tables. See [Prerequisites](/prerequisites) for details.
+  </Step>
+  <Step title="Install dependencies">
+    Run `pip install -r requirements.txt` to install the `mariadb` Python connector.
+  </Step>
+  <Step title="Configure the connection">
+    Update the credentials in `main.py` to match your MariaDB user and database.
+  </Step>
+  <Step title="Run the app">
+    Execute `python main.py` and interact with the CLI menu to query and manage data.
+  </Step>
+</Steps>

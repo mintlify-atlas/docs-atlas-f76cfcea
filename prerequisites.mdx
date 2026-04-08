@@ -1,0 +1,135 @@
+---
+title: 'Prerequisites'
+description: 'Everything you need to install and configure before running the python-mariadb-example app.'
+---
+
+## System requirements
+
+| Requirement | Version | Notes |
+|---|---|---|
+| Python | 3.10+ | Required for `match` statements and union type hints (`int \| None`) |
+| MariaDB Server | Any recent stable | Must be running locally on `127.0.0.1:3306` by default |
+| pip | Any | Used to install the `mariadb` Python package |
+
+<Warning>
+Python 3.10 or higher is required. The codebase uses structural pattern matching (`match`/`case`) and union type hint syntax (`str | None`) that are not available in earlier versions.
+</Warning>
+
+## Set up the scott database
+
+The app connects with the following hardcoded credentials from `main.py`:
+
+```python
+sql = MariaDBInstance(
+    user="scott",
+    password="tiger",
+    database="scott",
+)
+```
+
+You need to create this database and user in your local MariaDB server before running the app.
+
+<Steps>
+  <Step title="Log in to MariaDB as root">
+    Open a terminal and connect to your MariaDB server as the root user (or any user with `CREATE` and `GRANT` privileges).
+
+    ```bash
+    mariadb -u root -p
+    ```
+  </Step>
+
+  <Step title="Create the database and user">
+    Run the following SQL to create the `scott` database and a matching user with the classic `tiger` password.
+
+    ```sql
+    CREATE DATABASE IF NOT EXISTS scott;
+
+    CREATE USER IF NOT EXISTS 'scott'@'localhost' IDENTIFIED BY 'tiger';
+
+    GRANT ALL PRIVILEGES ON scott.* TO 'scott'@'localhost';
+
+    FLUSH PRIVILEGES;
+    ```
+
+    <Note>
+      If your MariaDB server is configured to listen on `127.0.0.1` rather than `localhost`, you may need to create the user for both hosts or adjust the `host` parameter when instantiating `MariaDBInstance`.
+    </Note>
+  </Step>
+
+  <Step title="Create the emp and dept tables">
+    Switch to the `scott` database and create both tables.
+
+    ```sql
+    USE scott;
+
+    CREATE TABLE dept (
+        deptno INT PRIMARY KEY,
+        dname  VARCHAR(14),
+        loc    VARCHAR(13)
+    );
+
+    CREATE TABLE emp (
+        empno    INT PRIMARY KEY,
+        ename    VARCHAR(10),
+        job      VARCHAR(9),
+        mgr      INT,
+        hiredate DATE,
+        sal      FLOAT,
+        comm     FLOAT,
+        deptno   INT,
+        FOREIGN KEY (deptno) REFERENCES dept(deptno)
+    );
+    ```
+  </Step>
+
+  <Step title="Insert sample data">
+    Populate both tables with the classic scott/tiger demo records so you have data to query straight away.
+
+    ```sql
+    -- Departments
+    INSERT INTO dept VALUES (10, 'ACCOUNTING', 'NEW YORK');
+    INSERT INTO dept VALUES (20, 'RESEARCH',   'DALLAS');
+    INSERT INTO dept VALUES (30, 'SALES',      'CHICAGO');
+    INSERT INTO dept VALUES (40, 'OPERATIONS', 'BOSTON');
+
+    -- Employees
+    INSERT INTO emp VALUES (7369, 'SMITH',  'CLERK',     7902, '1980-12-17',  800.00, NULL, 20);
+    INSERT INTO emp VALUES (7499, 'ALLEN',  'SALESMAN',  7698, '1981-02-20', 1600.00,  300.00, 30);
+    INSERT INTO emp VALUES (7521, 'WARD',   'SALESMAN',  7698, '1981-02-22', 1250.00,  500.00, 30);
+    INSERT INTO emp VALUES (7566, 'JONES',  'MANAGER',   7839, '1981-04-02', 2975.00, NULL, 20);
+    INSERT INTO emp VALUES (7654, 'MARTIN', 'SALESMAN',  7698, '1981-09-28', 1250.00, 1400.00, 30);
+    INSERT INTO emp VALUES (7698, 'BLAKE',  'MANAGER',   7839, '1981-05-01', 2850.00, NULL, 30);
+    INSERT INTO emp VALUES (7782, 'CLARK',  'MANAGER',   7839, '1981-06-09', 2450.00, NULL, 10);
+    INSERT INTO emp VALUES (7839, 'KING',   'PRESIDENT', NULL, '1981-11-17', 5000.00, NULL, 10);
+    INSERT INTO emp VALUES (7844, 'TURNER', 'SALESMAN',  7698, '1981-09-08', 1500.00,    0.00, 30);
+    INSERT INTO emp VALUES (7900, 'JAMES',  'CLERK',     7698, '1981-12-03',  950.00, NULL, 30);
+    INSERT INTO emp VALUES (7902, 'FORD',   'ANALYST',   7566, '1981-12-03', 3000.00, NULL, 20);
+    INSERT INTO emp VALUES (7934, 'MILLER', 'CLERK',     7782, '1982-01-23', 1300.00, NULL, 10);
+    ```
+
+    <Tip>
+      `KING` (empno 7839) has no manager (`mgr` is `NULL`) because he is the president. Several employees also have no commission (`comm` is `NULL`). Both columns are nullable in the `Employee` dataclass, so this data will display correctly.
+    </Tip>
+  </Step>
+
+  <Step title="Verify the setup">
+    Confirm the tables exist and contain rows before proceeding.
+
+    ```sql
+    SELECT COUNT(*) FROM dept;  -- should return 4
+    SELECT COUNT(*) FROM emp;   -- should return 12
+    ```
+  </Step>
+</Steps>
+
+## Install the Python package
+
+The only runtime dependency is the `mariadb` Python connector. You can install it manually or via the `requirements.txt` file included in the repo.
+
+```bash
+pip install mariadb
+```
+
+<Note>
+  The `mariadb` Python package requires the MariaDB Connector/C native library to be installed on your system. If `pip install mariadb` fails with a compiler or linker error, install the MariaDB Connector/C package for your operating system from the official MariaDB downloads page first.
+</Note>

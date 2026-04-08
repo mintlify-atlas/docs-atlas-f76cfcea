@@ -1,0 +1,97 @@
+---
+title: 'Running the app'
+description: 'How to start the application and navigate the main menu.'
+---
+
+## Prerequisites
+
+Before starting the application, ensure the following are in place:
+
+- Python 3.10+ is installed
+- The `mariadb` Python connector package is installed
+- A running MariaDB instance with the `scott` database and user configured
+
+<Warning>
+  The application connects to MariaDB using hardcoded credentials (`user="scott"`, `password="tiger"`, `database="scott"`). Ensure your MariaDB instance matches these settings before running.
+</Warning>
+
+## Starting the app
+
+<Steps>
+  <Step title="Ensure MariaDB is running">
+    Start your MariaDB server and confirm it is accepting connections on the default port.
+  </Step>
+  <Step title="Navigate to the project directory">
+    ```bash
+    cd path/to/python-mariadb-example
+    ```
+  </Step>
+  <Step title="Run the application">
+    ```bash
+    python main.py
+    ```
+
+    On startup, the app connects to MariaDB and immediately displays the main menu.
+  </Step>
+</Steps>
+
+## Main menu
+
+Once the app starts, the following menu is printed to the terminal:
+
+```text
+[1] Get all employees
+[2] Get employee by employee no.
+[3] Get all departments
+[4] Get employee count per department
+[5] Insert employee
+[6] Delete employee by employee no.
+[0] Exit
+```
+
+## Selecting an option
+
+Type the number corresponding to your desired operation and press **Enter**. The app will execute the operation and return to the main menu when it completes.
+
+```text
+Enter choice: 1
+```
+
+### Menu options at a glance
+
+| Option | Description | Reference |
+|--------|-------------|-----------|
+| `[1]` | List all employees | [Employee operations](/usage/employee-operations) |
+| `[2]` | Look up an employee by number | [Employee operations](/usage/employee-operations) |
+| `[3]` | List all departments | [Department operations](/usage/department-operations) |
+| `[4]` | Show employee count per department | [Department operations](/usage/department-operations) |
+| `[5]` | Insert a new employee record | [Employee operations](/usage/employee-operations) |
+| `[6]` | Delete an employee by number | [Employee operations](/usage/employee-operations) |
+| `[0]` | Exit the application | — |
+
+## Exiting the app
+
+Type `0` and press **Enter** at the main menu prompt to exit. The application will close the database connection and terminate cleanly.
+
+```text
+Enter choice: 0
+```
+
+<Note>
+  The app runs in a continuous loop. After each operation completes, it returns to the main menu and waits for your next input. The only way to stop the loop is to enter `0`.
+</Note>
+
+<Warning>
+  The main menu input is parsed with `int()` directly — entering a non-integer value (e.g., a letter or empty string) will raise an unhandled `ValueError` exception and crash the application. Always enter a whole number at the `Enter choice:` prompt.
+</Warning>
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Employee operations" icon="user" href="/usage/employee-operations">
+    List, search, insert, and delete employee records.
+  </Card>
+  <Card title="Department operations" icon="building" href="/usage/department-operations">
+    View departments and employee counts per department.
+  </Card>
+</CardGroup>

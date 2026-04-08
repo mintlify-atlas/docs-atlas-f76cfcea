@@ -1,0 +1,110 @@
+---
+title: 'Department operations'
+description: 'How to view departments and employee counts per department.'
+---
+
+The application provides two department-related operations accessible from the main menu. Both operations read from the `dept` table in MariaDB.
+
+## Option [3] — Get all departments
+
+Select `3` from the main menu to retrieve and display every row in the `dept` table.
+
+```text
+Enter choice: 3
+```
+
+The application fetches all department records and prints each one using the following format:
+
+```text
+-----
+Department Number: 10
+Department Name: ACCOUNTING
+Location: NEW YORK
+```
+
+### Fields displayed
+
+| Field | Description |
+|-------|-------------|
+| `Department Number` | Department number (`deptno`) |
+| `Department Name` | Name of the department (`dname`) |
+| `Location` | Physical location of the department (`loc`) |
+
+<Note>
+  Fields that are `NULL` in the database are displayed as `None`.
+</Note>
+
+### Example output (multiple departments)
+
+```text
+-----
+Department Number: 10
+Department Name: ACCOUNTING
+Location: NEW YORK
+-----
+Department Number: 20
+Department Name: RESEARCH
+Location: DALLAS
+-----
+Department Number: 30
+Department Name: SALES
+Location: CHICAGO
+-----
+Department Number: 40
+Department Name: OPERATIONS
+Location: BOSTON
+```
+
+---
+
+## Option [4] — Get employee count per department
+
+Select `4` from the main menu to see how many employees belong to each department.
+
+```text
+Enter choice: 4
+```
+
+The application prints a header row followed by one row per department:
+
+```text
+Department Name		Employee Count
+ACCOUNTING		3
+RESEARCH		5
+SALES		6
+OPERATIONS		0
+```
+
+### How it works
+
+This operation runs the following query against MariaDB:
+
+```sql
+SELECT d.dname DEPARTMENT_NAME, COUNT(e.empno) EMPLOYEE_COUNT
+FROM dept d LEFT JOIN emp e ON d.deptno = e.deptno
+GROUP BY d.deptno
+```
+
+<Note>
+  The query uses a `LEFT JOIN` between `dept` and `emp`. This ensures that every department appears in the results, even if it has no employees. A department with zero employees will show `0` in the `Employee Count` column rather than being omitted from the output.
+</Note>
+
+### Output columns
+
+| Column | Description |
+|--------|-------------|
+| `Department Name` | Name of the department (`dname`) |
+| `Employee Count` | Number of employees assigned to that department |
+
+---
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Running the app" icon="terminal" href="/usage/running-the-app">
+    How to start the application and navigate the main menu.
+  </Card>
+  <Card title="Employee operations" icon="user" href="/usage/employee-operations">
+    List, search, insert, and delete employee records.
+  </Card>
+</CardGroup>
